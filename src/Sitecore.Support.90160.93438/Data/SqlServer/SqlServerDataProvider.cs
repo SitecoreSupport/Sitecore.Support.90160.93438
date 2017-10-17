@@ -5,6 +5,7 @@
     using Sitecore.Data.Items;
     using Sitecore.Diagnostics;
     using Configuration;
+    using System;
 
     public class SqlServerDataProvider : Sitecore.Data.SqlServer.SqlServerDataProvider
     {
@@ -73,6 +74,23 @@
                 {
                     this.Descendants_ItemCreated(itemId, item.ID);
                 }
+            }
+        }
+
+        public void Restore(ID parentID, ID itemID)
+        {
+            DescendantsLock.AcquireReaderLock(-1);
+            try
+            {
+                Descendants_ItemCreated(parentID, itemID);
+            }
+            catch (Exception e)
+            {
+                Log.Error("Sitecore.Support.90160.93438: " + e.Message, this);
+            }
+            finally
+            {
+                DescendantsLock.ReleaseReaderLock();
             }
         }
     }

@@ -54,10 +54,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\SqlServer\SqlServerDataProvider.cs" />
+    <Compile Include="Pipelines\Loader\SubscribeToItemRestored.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Config\Include\zzz\Sitecore.Support.90160.93438.config" />
+    <Content Include="App_Config\Include\zzz\Sitecore.Support.90160.93438.config">
+      <SubType>Designer</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
