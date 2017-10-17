@@ -6,6 +6,8 @@
     using Sitecore.Diagnostics;
     using Configuration;
     using System;
+    using Sitecore.Eventing;
+    using Sitecore.Data.Archiving;
 
     public class SqlServerDataProvider : Sitecore.Data.SqlServer.SqlServerDataProvider
     {
@@ -77,7 +79,7 @@
             }
         }
 
-        public void Restore(ID parentID, ID itemID)
+        protected virtual void OnRestoreItemCompleted(ID parentID, ID itemID)
         {
             DescendantsLock.AcquireReaderLock(-1);
             try
@@ -92,6 +94,12 @@
             {
                 DescendantsLock.ReleaseReaderLock();
             }
+        }
+
+        protected override void DoInitializeEvents()
+        {           
+            base.DoInitializeEvents();
+            EventManager.Subscribe<RestoreItemCompletedEvent>((e, c) => OnRestoreItemCompleted(new ID(e.ParentId), new ID(e.ItemId)));           
         }
     }
 }
