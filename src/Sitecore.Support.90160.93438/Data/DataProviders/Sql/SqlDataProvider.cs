@@ -81,6 +81,15 @@
                 Log.Error("Failed to update Descendants table", exception, this);
             }
             this.RebuildThread = null;
+            //sitecore.support.90160.93438
+            if ((base.Database.GetItem(itemId) != null) && (base.Database.GetItem(itemId).Children.Count > 0))
+            {
+                foreach (Item item in base.Database.GetItem(itemId).Children)
+                {
+                    this.Descendants_ItemCreated(itemId, item.ID);
+                }
+            }
+            //end of sitecore.support.90160.93438
         }
 
         protected override void Descendants_ItemDeleted(ID itemId)
@@ -100,6 +109,13 @@
                 {
                     using (DataProviderTransaction dataProviderTransaction = this.api.CreateTransaction())
                     {
+                        //sitecore.support.90160.93438
+                        this.Api.Execute("DELETE FROM {0}Descendants{1} WHERE {0}Descendant{1} IN (SELECT {0}Descendant{1} FROM {0}Descendants{1} WHERE {0}Ancestor{1} = {2}itemId{3})", new object[]
+                        {
+                            "itemId",
+                            itemId
+                        });
+                        // end of sitecore.support.90160.93438
                         this.api.Execute("DELETE FROM {0}Descendants{1} WHERE {0}Descendant{1} = {2}itemId{3}", new object[]
                         {
                             "itemId",
@@ -114,6 +130,31 @@
                 Log.Error("Failed to update Descendants table", exception, this);
             }
             this.RebuildThread = null;
+        }
+
+        //sitecore.support.90160
+        protected override void DoInitializeEvents()
+        {
+            base.DoInitializeEvents();
+            EventManager.Subscribe<RestoreItemCompletedEvent>((e, c) => this.OnRestoreItemCompleted(new ID(e.ParentId), new ID(e.ItemId)));
+        }
+
+        //sitecore.support.90160
+        protected virtual void OnRestoreItemCompleted(ID parentID, ID itemID)
+        {
+            base.DescendantsLock.AcquireReaderLock(-1);
+            try
+            {
+                this.Descendants_ItemCreated(parentID, itemID);
+            }
+            catch (Exception exception)
+            {
+                Log.Error("Sitecore.Support.90160: " + exception.Message, this);
+            }
+            finally
+            {
+                base.DescendantsLock.ReleaseReaderLock();
+            }
         }
 
         #region private/internal part
